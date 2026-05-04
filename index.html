@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VerbMaster – Aprende Verbos en Inglés</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --card: #1a2236;
+    --border: #243050;
+    --accent: #4fffb0;
+    --accent2: #7b6cff;
+    --accent3: #ff6c8a;
+    --text: #e8edf8;
+    --muted: #7a8aaa;
+    --radius: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0e1526 0%, #151e35 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 32px 20px;
+    position: sticky; top:0; z-index:100;
+    backdrop-filter: blur(12px);
+  }
+  .header-inner { max-width:1200px; margin:auto; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .logo { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; letter-spacing:-0.5px; }
+  .logo span { color: var(--accent); }
+  .tabs { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
+  .tab-btn {
+    padding:8px 20px; border-radius:40px; border:1.5px solid var(--border);
+    background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif;
+    font-size:.875rem; font-weight:500; cursor:pointer; transition:all .2s;
+  }
+  .tab-btn.active, .tab-btn:hover {
+    background: var(--accent); border-color: var(--accent);
+    color: #0b0f1a; font-weight:700;
+  }
+  .tab-btn.tab-irreg.active { background:var(--accent2); border-color:var(--accent2); color:#fff; }
+  .tab-btn.tab-quiz.active  { background:var(--accent3); border-color:var(--accent3); color:#fff; }
+
+  /* ── SEARCH & FILTERS ── */
+  .toolbar {
+    max-width:1200px; margin:28px auto 0; padding:0 32px;
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  }
+  .search-wrap { position:relative; flex:1; min-width:220px; }
+  .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); opacity:.4; pointer-events:none; }
+  .search-input {
+    width:100%; background:var(--card); border:1.5px solid var(--border);
+    border-radius:40px; padding:11px 18px 11px 44px; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; transition:border .2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .filter-select {
+    background:var(--card); border:1.5px solid var(--border); border-radius:40px;
+    padding:11px 18px; color:var(--text); font-family:'DM Sans',sans-serif;
+    font-size:.9rem; outline:none; cursor:pointer;
+  }
+  .count-badge {
+    background:var(--surface); border:1px solid var(--border); border-radius:40px;
+    padding:8px 16px; font-size:.8rem; color:var(--muted); white-space:nowrap;
+  }
+  .count-badge b { color:var(--accent); }
+
+  /* ── VERB GRID ── */
+  .grid-section { max-width:1200px; margin:28px auto 60px; padding:0 32px; }
+  .verb-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap:18px;
+  }
+
+  /* ── VERB CARD ── */
+  .verb-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    cursor:pointer;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+    position:relative; overflow:hidden;
+  }
+  .verb-card::before {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(79,255,176,.05) 0%, transparent 60%);
+    opacity:0; transition:opacity .2s;
+  }
+  .verb-card:hover { transform:translateY(-3px); border-color:var(--accent); box-shadow:0 8px 32px rgba(79,255,176,.1); }
+  .verb-card:hover::before { opacity:1; }
+  .verb-card.irreg { border-left:3px solid var(--accent2); }
+  .verb-card.reg   { border-left:3px solid var(--accent); }
+
+  .verb-badge {
+    display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; padding:3px 10px; border-radius:20px; margin-bottom:12px;
+  }
+  .verb-badge.irreg { background:rgba(123,108,255,.18); color:var(--accent2); }
+  .verb-badge.reg   { background:rgba(79,255,176,.12); color:var(--accent); }
+
+  .verb-infinitive {
+    font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; letter-spacing:-0.5px;
+    display:flex; align-items:center; gap:10px; margin-bottom:4px;
+  }
+  .verb-spanish {
+    font-size:.9rem; color:var(--muted); margin-bottom:16px;
+  }
+  .forms-row {
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px;
+  }
+  .form-box {
+    background:var(--surface); border-radius:10px; padding:10px 10px 8px;
+    border:1px solid var(--border);
+  }
+  .form-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:4px; }
+  .form-value { font-size:.85rem; font-weight:500; color:var(--text); }
+
+  .card-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-sm {
+    flex:1; min-width:90px; padding:8px 12px; border-radius:10px; border:1.5px solid var(--border);
+    background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif;
+    font-size:.78rem; font-weight:500; cursor:pointer; transition:all .18s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn-sm.listen { border-color:rgba(79,255,176,.4); color:var(--accent); }
+  .btn-sm.listen:hover { background:rgba(79,255,176,.12); }
+  .btn-sm.example { border-color:rgba(255,108,138,.35); color:var(--accent3); }
+  .btn-sm.example:hover { background:rgba(255,108,138,.1); }
+
+  /* ── SOUND indicator ── */
+  .speaking .verb-infinitive::after {
+    content:''; display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:var(--accent); animation:pulse .6s infinite alternate;
+  }
+  @keyframes pulse { from{opacity:.3} to{opacity:1} }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:200;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background: var(--card); border:1.5px solid var(--border); border-radius:24px;
+    padding:36px; max-width:540px; width:100%; max-height:90vh; overflow-y:auto;
+    transform:translateY(20px); transition:transform .25s;
+    scrollbar-width:thin; scrollbar-color: var(--border) transparent;
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-close {
+    float:right; background:var(--surface); border:1px solid var(--border);
+    color:var(--muted); width:36px; height:36px; border-radius:50%; cursor:pointer;
+    font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-title { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; margin-bottom:6px; }
+  .modal-spanish { color:var(--muted); font-size:1rem; margin-bottom:24px; }
+  .modal-forms {
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px;
+  }
+  .modal-form-box {
+    background:var(--surface); border-radius:12px; padding:14px;
+    border:1px solid var(--border); text-align:center;
+  }
+  .modal-form-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; }
+  .modal-form-value { font-size:1rem; font-weight:700; }
+  .modal-form-box.inf .modal-form-value  { color:var(--accent); }
+  .modal-form-box.past .modal-form-value { color:var(--accent2); }
+  .modal-form-box.pp .modal-form-value   { color:var(--accent3); }
+  .modal-section-title {
+    font-size:.75rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--muted); margin:20px 0 12px; font-weight:600;
+  }
+  .sentence-list { display:flex; flex-direction:column; gap:10px; }
+  .sentence-item {
+    background:var(--surface); border-radius:10px; padding:14px 16px;
+    border-left:3px solid var(--accent2); line-height:1.6;
+  }
+  .sentence-item .eng { font-size:.95rem; margin-bottom:4px; }
+  .sentence-item .esp { font-size:.83rem; color:var(--muted); }
+  .modal-listen-btn {
+    width:100%; padding:14px; border-radius:12px; margin-top:20px;
+    background:rgba(79,255,176,.1); border:1.5px solid rgba(79,255,176,.35);
+    color:var(--accent); font-family:'DM Sans',sans-serif; font-size:.95rem;
+    font-weight:600; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .modal-listen-btn:hover { background:rgba(79,255,176,.2); }
+
+  /* ── QUIZ MODE ── */
+  #quiz-section { max-width:680px; margin:40px auto 60px; padding:0 32px; }
+  .quiz-card {
+    background:var(--card); border:1.5px solid var(--border); border-radius:24px;
+    padding:40px; text-align:center;
+  }
+  .quiz-progress-bar {
+    height:4px; background:var(--border); border-radius:4px; margin-bottom:32px; overflow:hidden;
+  }
+  .quiz-progress-fill { height:100%; background:var(--accent3); border-radius:4px; transition:width .4s; }
+  .quiz-question-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:12px; }
+  .quiz-verb { font-family:'Syne',sans-serif; font-size:2.8rem; font-weight:800; margin-bottom:8px; letter-spacing:-1px; }
+  .quiz-hint { color:var(--muted); font-size:.95rem; margin-bottom:32px; }
+  .quiz-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+  .quiz-option {
+    background:var(--surface); border:2px solid var(--border); border-radius:14px;
+    padding:16px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.95rem;
+    color:var(--text); transition:all .18s; font-weight:500;
+  }
+  .quiz-option:hover { border-color:var(--accent2); background:rgba(123,108,255,.1); }
+  .quiz-option.correct { border-color:var(--accent)!important; background:rgba(79,255,176,.12)!important; color:var(--accent); }
+  .quiz-option.wrong   { border-color:var(--accent3)!important; background:rgba(255,108,138,.1)!important; color:var(--accent3); }
+  .quiz-score { font-size:.9rem; color:var(--muted); }
+  .quiz-score b { color:var(--accent); font-size:1.1rem; }
+  .quiz-next-btn {
+    padding:14px 32px; border-radius:40px; background:var(--accent2);
+    border:none; color:#fff; font-family:'DM Sans',sans-serif; font-size:.95rem;
+    font-weight:700; cursor:pointer; transition:all .2s; margin-top:8px;
+  }
+  .quiz-next-btn:hover { opacity:.85; }
+  .quiz-result {
+    background:var(--surface); border-radius:14px; padding:24px; margin-top:20px;
+  }
+  .quiz-result p { font-size:.9rem; color:var(--muted); margin-bottom:6px; }
+  .quiz-result .big { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; color:var(--accent); }
+
+  /* ── EMPTY ── */
+  .empty { text-align:center; padding:60px 20px; color:var(--muted); }
+  .empty .icon { font-size:3rem; margin-bottom:12px; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:640px){
+    header { padding:18px 20px 14px; }
+    .toolbar, .grid-section, #quiz-section { padding:0 16px; }
+    .modal { padding:24px; }
+    .quiz-card { padding:28px 20px; }
+    .quiz-options { grid-template-columns:1fr; }
+    .modal-forms, .forms-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Verb<span>Master</span></div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('all')">📚 All Verbs</button>
+      <button class="tab-btn tab-irreg" onclick="switchTab('irregular')">⚡ Irregular</button>
+      <button class="tab-btn" onclick="switchTab('regular')">✅ Regular</button>
+      <button class="tab-btn tab-quiz" onclick="switchTab('quiz')">🎯 Quiz</button>
+    </div>
+  </div>
+</header>
+
+<div id="main-section">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search verb... (e.g. run, go, work)" oninput="renderVerbs()">
+    </div>
+    <select class="filter-select" id="soundFilter" onchange="renderVerbs()">
+      <option value="">All sounds</option>
+      <option value="/id/">Sound /id/</option>
+      <option value="/t/">Sound /t/</option>
+      <option value="/d/">Sound /d/</option>
+    </select>
+    <div class="count-badge">Showing <b id="countDisplay">0</b> verbs</div>
+  </div>
+
+  <div class="grid-section">
+    <div class="verb-grid" id="verbGrid"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="icon">🔍</div>
+      <p>No verbs found matching your search.</p>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-section" style="display:none">
+  <div class="quiz-card" id="quizCard"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const IRREGULAR = [
+  {inf:"Arise",past:"Arose",pp:"Arisen",es:"Surgir / Levantarse"},
+  {inf:"Awake",past:"Awoke",pp:"Awoken",es:"Despertarse"},
+  {inf:"Be",past:"Was/Were",pp:"Been",es:"Ser / Estar"},
+  {inf:"Bear",past:"Bore",pp:"Borne/Born",es:"Soportar / Dar a luz"},
+  {inf:"Beat",past:"Beat",pp:"Beaten",es:"Golpear"},
+  {inf:"Become",past:"Became",pp:"Become",es:"Llegar a ser"},
+  {inf:"Begin",past:"Began",pp:"Begun",es:"Empezar"},
+  {inf:"Bend",past:"Bent",pp:"Bent",es:"Doblar"},
+  {inf:"Bet",past:"Bet",pp:"Bet",es:"Apostar"},
+  {inf:"Bind",past:"Bound",pp:"Bound",es:"Atar / Encuadernar"},
+  {inf:"Bite",past:"Bit",pp:"Bitten",es:"Morder"},
+  {inf:"Bleed",past:"Bled",pp:"Bled",es:"Sangrar"},
+  {inf:"Blow",past:"Blew",pp:"Blown",es:"Soplar"},
+  {inf:"Break",past:"Broke",pp:"Broken",es:"Romper"},
+  {inf:"Breed",past:"Bred",pp:"Bred",es:"Criar"},
+  {inf:"Bring",past:"Brought",pp:"Brought",es:"Traer / Llevar"},
+  {inf:"Build",past:"Built",pp:"Built",es:"Edificar"},
+  {inf:"Burn",past:"Burnt",pp:"Burnt",es:"Quemar"},
+  {inf:"Burst",past:"Burst",pp:"Burst",es:"Reventar"},
+  {inf:"Buy",past:"Bought",pp:"Bought",es:"Comprar"},
+  {inf:"Cast",past:"Cast",pp:"Cast",es:"Arrojar"},
+  {inf:"Catch",past:"Caught",pp:"Caught",es:"Coger"},
+  {inf:"Choose",past:"Chose",pp:"Chosen",es:"Elegir"},
+  {inf:"Cling",past:"Clung",pp:"Clung",es:"Agarrarse"},
+  {inf:"Come",past:"Came",pp:"Come",es:"Venir"},
+  {inf:"Cost",past:"Cost",pp:"Cost",es:"Costar"},
+  {inf:"Creep",past:"Crept",pp:"Crept",es:"Arrastrarse"},
+  {inf:"Cut",past:"Cut",pp:"Cut",es:"Cortar"},
+  {inf:"Deal",past:"Dealt",pp:"Dealt",es:"Tratar"},
+  {inf:"Dig",past:"Dug",pp:"Dug",es:"Cavar"},
+  {inf:"Do",past:"Did",pp:"Done",es:"Hacer"},
+  {inf:"Draw",past:"Drew",pp:"Drawn",es:"Dibujar"},
+  {inf:"Dream",past:"Dreamt",pp:"Dreamt",es:"Soñar"},
+  {inf:"Drink",past:"Drank",pp:"Drunk",es:"Beber"},
+  {inf:"Drive",past:"Drove",pp:"Driven",es:"Conducir"},
+  {inf:"Eat",past:"Ate",pp:"Eaten",es:"Comer"},
+  {inf:"Fall",past:"Fell",pp:"Fallen",es:"Caer"},
+  {inf:"Feed",past:"Fed",pp:"Fed",es:"Alimentar"},
+  {inf:"Feel",past:"Felt",pp:"Felt",es:"Sentir"},
+  {inf:"Fight",past:"Fought",pp:"Fought",es:"Luchar"},
+  {inf:"Find",past:"Found",pp:"Found",es:"Encontrar"},
+  {inf:"Flee",past:"Fled",pp:"Fled",es:"Huir"},
+  {inf:"Fly",past:"Flew",pp:"Flown",es:"Volar"},
+  {inf:"Forbid",past:"Forbade",pp:"Forbidden",es:"Prohibir"},
+  {inf:"Forget",past:"Forgot",pp:"Forgotten",es:"Olvidar"},
+  {inf:"Forgive",past:"Forgave",pp:"Forgiven",es:"Perdonar"},
+  {inf:"Freeze",past:"Froze",pp:"Frozen",es:"Helar"},
+  {inf:"Get",past:"Got",pp:"Got/Gotten",es:"Obtener"},
+  {inf:"Give",past:"Gave",pp:"Given",es:"Dar"},
+  {inf:"Go",past:"Went",pp:"Gone",es:"Ir"},
+  {inf:"Grind",past:"Ground",pp:"Ground",es:"Moler"},
+  {inf:"Grow",past:"Grew",pp:"Grown",es:"Crecer"},
+  {inf:"Hang",past:"Hung",pp:"Hung",es:"Colgar"},
+  {inf:"Have",past:"Had",pp:"Had",es:"Haber / Tener"},
+  {inf:"Hear",past:"Heard",pp:"Heard",es:"Oír"},
+  {inf:"Hide",past:"Hid",pp:"Hidden",es:"Ocultar"},
+  {inf:"Hit",past:"Hit",pp:"Hit",es:"Golpear"},
+  {inf:"Hold",past:"Held",pp:"Held",es:"Agarrar / Celebrar"},
+  {inf:"Hurt",past:"Hurt",pp:"Hurt",es:"Herir"},
+  {inf:"Keep",past:"Kept",pp:"Kept",es:"Conservar"},
+  {inf:"Kneel",past:"Knelt",pp:"Knelt",es:"Arrodillarse"},
+  {inf:"Knit",past:"Knit",pp:"Knit",es:"Hacer punto"},
+  {inf:"Know",past:"Knew",pp:"Known",es:"Saber / Conocer"},
+  {inf:"Lay",past:"Laid",pp:"Laid",es:"Poner"},
+  {inf:"Lead",past:"Led",pp:"Led",es:"Conducir / Liderar"},
+  {inf:"Leave",past:"Left",pp:"Left",es:"Dejar"},
+  {inf:"Lend",past:"Lent",pp:"Lent",es:"Prestar"},
+  {inf:"Let",past:"Let",pp:"Let",es:"Permitir"},
+  {inf:"Lie",past:"Lay",pp:"Lain",es:"Echarse"},
+  {inf:"Light",past:"Lit",pp:"Lit",es:"Encender"},
+  {inf:"Lose",past:"Lost",pp:"Lost",es:"Perder"},
+  {inf:"Make",past:"Made",pp:"Made",es:"Hacer"},
+  {inf:"Mean",past:"Meant",pp:"Meant",es:"Significar"},
+  {inf:"Meet",past:"Met",pp:"Met",es:"Encontrar"},
+  {inf:"Mistake",past:"Mistook",pp:"Mistaken",es:"Equivocar"},
+  {inf:"Overcome",past:"Overcame",pp:"Overcome",es:"Vencer"},
+  {inf:"Pay",past:"Paid",pp:"Paid",es:"Pagar"},
+  {inf:"Put",past:"Put",pp:"Put",es:"Poner"},
+  {inf:"Read",past:"Read",pp:"Read",es:"Leer"},
+  {inf:"Ride",past:"Rode",pp:"Ridden",es:"Montar"},
+  {inf:"Ring",past:"Rang",pp:"Rung",es:"Llamar"},
+  {inf:"Rise",past:"Rose",pp:"Risen",es:"Levantarse"},
+  {inf:"Run",past:"Ran",pp:"Run",es:"Correr"},
+  {inf:"Say",past:"Said",pp:"Said",es:"Decir"},
+  {inf:"See",past:"Saw",pp:"Seen",es:"Ver"},
+  {inf:"Seek",past:"Sought",pp:"Sought",es:"Buscar"},
+  {inf:"Sell",past:"Sold",pp:"Sold",es:"Vender"},
+  {inf:"Send",past:"Sent",pp:"Sent",es:"Enviar"},
+  {inf:"Set",past:"Set",pp:"Set",es:"Poner(se)"},
+  {inf:"Shake",past:"Shook",pp:"Shaken",es:"Sacudir"},
+  {inf:"Shine",past:"Shone",pp:"Shone",es:"Brillar"},
+  {inf:"Shoot",past:"Shot",pp:"Shot",es:"Disparar"},
+  {inf:"Show",past:"Showed",pp:"Shown",es:"Mostrar"},
+  {inf:"Shrink",past:"Shrank",pp:"Shrunk",es:"Encogerse"},
+  {inf:"Shut",past:"Shut",pp:"Shut",es:"Cerrar"},
+  {inf:"Sing",past:"Sang",pp:"Sung",es:"Cantar"},
+  {inf:"Sink",past:"Sank",pp:"Sunk",es:"Hundir"},
+  {inf:"Sit",past:"Sat",pp:"Sat",es:"Sentarse"},
+  {inf:"Sleep",past:"Slept",pp:"Slept",es:"Dormir"},
+  {inf:"Slide",past:"Slid",pp:"Slid",es:"Resbalar"},
+  {inf:"Speak",past:"Spoke",pp:"Spoken",es:"Hablar"},
+  {inf:"Speed",past:"Sped",pp:"Sped",es:"Acelerar"},
+  {inf:"Spend",past:"Spent",pp:"Spent",es:"Gastar"},
+  {inf:"Spin",past:"Spun",pp:"Spun",es:"Hilar"},
+  {inf:"Split",past:"Split",pp:"Split",es:"Partir"},
+  {inf:"Spread",past:"Spread",pp:"Spread",es:"Extender"},
+  {inf:"Spring",past:"Sprang",pp:"Sprung",es:"Saltar"},
+  {inf:"Stand",past:"Stood",pp:"Stood",es:"Estar en pie"},
+  {inf:"Steal",past:"Stole",pp:"Stolen",es:"Robar"},
+  {inf:"Stick",past:"Stuck",pp:"Stuck",es:"Pegar"},
+  {inf:"Sting",past:"Stung",pp:"Stung",es:"Picar"},
+  {inf:"Strike",past:"Struck",pp:"Struck",es:"Golpear"},
+  {inf:"Swear",past:"Swore",pp:"Sworn",es:"Jurar"},
+  {inf:"Sweep",past:"Swept",pp:"Swept",es:"Barrer"},
+  {inf:"Swim",past:"Swam",pp:"Swum",es:"Nadar"},
+  {inf:"Swing",past:"Swung",pp:"Swung",es:"Columpiarse"},
+  {inf:"Take",past:"Took",pp:"Taken",es:"Coger / Tomar"},
+  {inf:"Teach",past:"Taught",pp:"Taught",es:"Enseñar"},
+  {inf:"Tear",past:"Tore",pp:"Torn",es:"Rasgar"},
+  {inf:"Tell",past:"Told",pp:"Told",es:"Decir"},
+  {inf:"Think",past:"Thought",pp:"Thought",es:"Pensar"},
+  {inf:"Throw",past:"Threw",pp:"Thrown",es:"Arrojar / Tirar"},
+  {inf:"Understand",past:"Understood",pp:"Understood",es:"Entender"},
+  {inf:"Wake",past:"Woke",pp:"Woken",es:"Despertarse"},
+  {inf:"Wear",past:"Wore",pp:"Worn",es:"Llevar puesto"},
+  {inf:"Weep",past:"Wept",pp:"Wept",es:"Llorar"},
+  {inf:"Win",past:"Won",pp:"Won",es:"Ganar"},
+  {inf:"Write",past:"Wrote",pp:"Written",es:"Escribir"},
+];
+
+const REGULAR = [
+  // /id/ sound
+  {inf:"Accept",past:"Accepted",pp:"Accepted",es:"Aceptar",sound:"/id/"},
+  {inf:"Count",past:"Counted",pp:"Counted",es:"Contar",sound:"/id/"},
+  {inf:"Date",past:"Dated",pp:"Dated",es:"Citar",sound:"/id/"},
+  {inf:"End",past:"Ended",pp:"Ended",es:"Terminar",sound:"/id/"},
+  {inf:"Expect",past:"Expected",pp:"Expected",es:"Esperar",sound:"/id/"},
+  {inf:"Intend",past:"Intended",pp:"Intended",es:"Intentar",sound:"/id/"},
+  {inf:"Need",past:"Needed",pp:"Needed",es:"Necesitar",sound:"/id/"},
+  {inf:"Plant",past:"Planted",pp:"Planted",es:"Plantar",sound:"/id/"},
+  {inf:"Point",past:"Pointed",pp:"Pointed",es:"Señalar",sound:"/id/"},
+  {inf:"Rent",past:"Rented",pp:"Rented",es:"Rentar",sound:"/id/"},
+  {inf:"Repeat",past:"Repeated",pp:"Repeated",es:"Repetir",sound:"/id/"},
+  {inf:"Start",past:"Started",pp:"Started",es:"Empezar",sound:"/id/"},
+  {inf:"Visit",past:"Visited",pp:"Visited",es:"Visitar",sound:"/id/"},
+  {inf:"Wait",past:"Waited",pp:"Waited",es:"Esperar",sound:"/id/"},
+  {inf:"Want",past:"Wanted",pp:"Wanted",es:"Querer",sound:"/id/"},
+  // /t/ sound
+  {inf:"Ask",past:"Asked",pp:"Asked",es:"Preguntar",sound:"/t/"},
+  {inf:"Cook",past:"Cooked",pp:"Cooked",es:"Cocinar",sound:"/t/"},
+  {inf:"Dance",past:"Danced",pp:"Danced",es:"Bailar",sound:"/t/"},
+  {inf:"Dress",past:"Dressed",pp:"Dressed",es:"Vestir",sound:"/t/"},
+  {inf:"Finish",past:"Finished",pp:"Finished",es:"Terminar",sound:"/t/"},
+  {inf:"Help",past:"Helped",pp:"Helped",es:"Ayudar",sound:"/t/"},
+  {inf:"Jump",past:"Jumped",pp:"Jumped",es:"Saltar",sound:"/t/"},
+  {inf:"Like",past:"Liked",pp:"Liked",es:"Gustar",sound:"/t/"},
+  {inf:"Look",past:"Looked",pp:"Looked",es:"Mirar",sound:"/t/"},
+  {inf:"Miss",past:"Missed",pp:"Missed",es:"Extrañar",sound:"/t/"},
+  {inf:"Practice",past:"Practiced",pp:"Practiced",es:"Practicar",sound:"/t/"},
+  {inf:"Push",past:"Pushed",pp:"Pushed",es:"Empujar",sound:"/t/"},
+  {inf:"Shop",past:"Shopped",pp:"Shopped",es:"Comprar",sound:"/t/"},
+  {inf:"Stop",past:"Stopped",pp:"Stopped",es:"Detener",sound:"/t/"},
+  {inf:"Talk",past:"Talked",pp:"Talked",es:"Hablar",sound:"/t/"},
+  {inf:"Use",past:"Used",pp:"Used",es:"Usar",sound:"/t/"},
+  {inf:"Walk",past:"Walked",pp:"Walked",es:"Caminar",sound:"/t/"},
+  {inf:"Wash",past:"Washed",pp:"Washed",es:"Lavar",sound:"/t/"},
+  {inf:"Work",past:"Worked",pp:"Worked",es:"Trabajar",sound:"/t/"},
+  // /d/ sound
+  {inf:"Answer",past:"Answered",pp:"Answered",es:"Responder",sound:"/d/"},
+  {inf:"Arrive",past:"Arrived",pp:"Arrived",es:"Llegar",sound:"/d/"},
+  {inf:"Belong",past:"Belonged",pp:"Belonged",es:"Pertenecer",sound:"/d/"},
+  {inf:"Change",past:"Changed",pp:"Changed",es:"Cambiar",sound:"/d/"},
+  {inf:"Clean",past:"Cleaned",pp:"Cleaned",es:"Limpiar",sound:"/d/"},
+  {inf:"Climb",past:"Climbed",pp:"Climbed",es:"Escalar",sound:"/d/"},
+  {inf:"Close",past:"Closed",pp:"Closed",es:"Cerrar",sound:"/d/"},
+  {inf:"Consider",past:"Considered",pp:"Considered",es:"Considerar",sound:"/d/"},
+  {inf:"Deliver",past:"Delivered",pp:"Delivered",es:"Entregar",sound:"/d/"},
+  {inf:"Enjoy",past:"Enjoyed",pp:"Enjoyed",es:"Disfrutar",sound:"/d/"},
+  {inf:"Fill",past:"Filled",pp:"Filled",es:"Llenar",sound:"/d/"},
+  {inf:"Follow",past:"Followed",pp:"Followed",es:"Seguir",sound:"/d/"},
+  {inf:"Hurry",past:"Hurried",pp:"Hurried",es:"Apurarse",sound:"/d/"},
+  {inf:"Learn",past:"Learned",pp:"Learned",es:"Aprender",sound:"/d/"},
+  {inf:"Listen",past:"Listened",pp:"Listened",es:"Escuchar",sound:"/d/"},
+  {inf:"Live",past:"Lived",pp:"Lived",es:"Vivir",sound:"/d/"},
+  {inf:"Love",past:"Loved",pp:"Loved",es:"Amar",sound:"/d/"},
+  {inf:"Open",past:"Opened",pp:"Opened",es:"Abrir",sound:"/d/"},
+  {inf:"Order",past:"Ordered",pp:"Ordered",es:"Ordenar",sound:"/d/"},
+  {inf:"Play",past:"Played",pp:"Played",es:"Jugar",sound:"/d/"},
+  {inf:"Remember",past:"Remembered",pp:"Remembered",es:"Recordar",sound:"/d/"},
+  {inf:"Stay",past:"Stayed",pp:"Stayed",es:"Permanecer",sound:"/d/"},
+  {inf:"Study",past:"Studied",pp:"Studied",es:"Estudiar",sound:"/d/"},
+  {inf:"Travel",past:"Traveled",pp:"Traveled",es:"Viajar",sound:"/d/"},
+  {inf:"Try",past:"Tried",pp:"Tried",es:"Intentar",sound:"/d/"},
+  {inf:"Turn",past:"Turned",pp:"Turned",es:"Voltear",sound:"/d/"},
+];
+
+// Example sentences for common verbs
+const EXAMPLES = {
+  "Be":     [{eng:"I am happy today.",esp:"Soy feliz hoy."},{eng:"She was tired yesterday.",esp:"Ella estaba cansada ayer."},{eng:"They have been friends for years.",esp:"Han sido amigos por años."}],
+  "Have":   [{eng:"I have a dog.",esp:"Tengo un perro."},{eng:"She had breakfast early.",esp:"Ella desayunó temprano."},{eng:"We have had a great time.",esp:"Hemos pasado un gran momento."}],
+  "Do":     [{eng:"I do my homework every day.",esp:"Hago mi tarea todos los días."},{eng:"He did the dishes last night.",esp:"Él lavó los platos anoche."},{eng:"She has done a wonderful job.",esp:"Ella ha hecho un trabajo maravilloso."}],
+  "Go":     [{eng:"I go to school every morning.",esp:"Voy a la escuela cada mañana."},{eng:"We went to the beach last summer.",esp:"Fuimos a la playa el verano pasado."},{eng:"She has gone to the store.",esp:"Ella ha ido a la tienda."}],
+  "Get":    [{eng:"I get up at 7 am.",esp:"Me levanto a las 7 am."},{eng:"He got a new job.",esp:"Él consiguió un nuevo trabajo."},{eng:"They have gotten better.",esp:"Ellos han mejorado."}],
+  "Come":   [{eng:"Please come here.",esp:"Por favor ven aquí."},{eng:"She came home late.",esp:"Ella llegó a casa tarde."},{eng:"He has come a long way.",esp:"Él ha llegado muy lejos."}],
+  "Know":   [{eng:"I know the answer.",esp:"Sé la respuesta."},{eng:"She knew him from school.",esp:"Ella lo conocía de la escuela."},{eng:"We have known each other for years.",esp:"Nos conocemos desde hace años."}],
+  "Take":   [{eng:"Take your medicine.",esp:"Toma tu medicina."},{eng:"She took a taxi.",esp:"Ella tomó un taxi."},{eng:"He has taken many photos.",esp:"Él ha tomado muchas fotos."}],
+  "See":    [{eng:"I see a bird in the tree.",esp:"Veo un pájaro en el árbol."},{eng:"We saw a movie yesterday.",esp:"Vimos una película ayer."},{eng:"She has seen that film before.",esp:"Ella ha visto esa película antes."}],
+  "Think":  [{eng:"I think you are right.",esp:"Creo que tienes razón."},{eng:"He thought about it carefully.",esp:"Él lo pensó cuidadosamente."},{eng:"We have thought of a solution.",esp:"Hemos pensado en una solución."}],
+  "Walk":   [{eng:"I walk to school every day.",esp:"Camino a la escuela todos los días."},{eng:"She walked home after work.",esp:"Ella caminó a casa después del trabajo."},{eng:"They have walked five miles.",esp:"Han caminado cinco millas."}],
+  "Work":   [{eng:"I work in an office.",esp:"Trabajo en una oficina."},{eng:"She worked hard all week.",esp:"Ella trabajó duro toda la semana."},{eng:"They have worked together before.",esp:"Han trabajado juntos antes."}],
+  "Talk":   [{eng:"We talk every evening.",esp:"Hablamos cada tarde."},{eng:"He talked to the manager.",esp:"Él habló con el gerente."},{eng:"She has talked about it many times.",esp:"Ella ha hablado de eso muchas veces."}],
+  "Play":   [{eng:"The children play outside.",esp:"Los niños juegan afuera."},{eng:"We played soccer yesterday.",esp:"Jugamos fútbol ayer."},{eng:"She has played piano since she was six.",esp:"Ella ha tocado piano desde los seis años."}],
+  "Study":  [{eng:"I study English every night.",esp:"Estudio inglés cada noche."},{eng:"He studied all weekend.",esp:"Él estudió todo el fin de semana."},{eng:"She has studied three languages.",esp:"Ella ha estudiado tres idiomas."}],
+  "Listen": [{eng:"Listen to the teacher.",esp:"Escucha al maestro."},{eng:"She listened to music all day.",esp:"Ella escuchó música todo el día."},{eng:"We have listened to that song many times.",esp:"Hemos escuchado esa canción muchas veces."}],
+  "Run":    [{eng:"I run every morning.",esp:"Corro cada mañana."},{eng:"She ran a marathon last year.",esp:"Ella corrió un maratón el año pasado."},{eng:"He has run five kilometers today.",esp:"Él ha corrido cinco kilómetros hoy."}],
+  "Write":  [{eng:"I write in my journal daily.",esp:"Escribo en mi diario a diario."},{eng:"She wrote a letter to her friend.",esp:"Ella le escribió una carta a su amiga."},{eng:"He has written three books.",esp:"Él ha escrito tres libros."}],
+  "Read":   [{eng:"I read a book every week.",esp:"Leo un libro cada semana."},{eng:"She read the article carefully.",esp:"Ella leyó el artículo cuidadosamente."},{eng:"We have read all the chapters.",esp:"Hemos leído todos los capítulos."}],
+  "Eat":    [{eng:"I eat breakfast at 8 am.",esp:"Desayuno a las 8 am."},{eng:"We ate pizza for dinner.",esp:"Comimos pizza en la cena."},{eng:"She has eaten sushi before.",esp:"Ella ha comido sushi antes."}],
+  "Drink":  [{eng:"I drink water every day.",esp:"Bebo agua todos los días."},{eng:"He drank coffee this morning.",esp:"Él tomó café esta mañana."},{eng:"They have drunk all the juice.",esp:"Se han tomado todo el jugo."}],
+  "Sleep":  [{eng:"I sleep eight hours a night.",esp:"Duermo ocho horas por noche."},{eng:"The baby slept all afternoon.",esp:"El bebé durmió toda la tarde."},{eng:"She has slept in this room before.",esp:"Ella ha dormido en esta habitación antes."}],
+  "Speak":  [{eng:"She speaks three languages.",esp:"Ella habla tres idiomas."},{eng:"He spoke at the conference.",esp:"Él habló en la conferencia."},{eng:"We have spoken about this before.",esp:"Hemos hablado de esto antes."}],
+  "Find":   [{eng:"I find this interesting.",esp:"Encuentro esto interesante."},{eng:"She found her keys.",esp:"Ella encontró sus llaves."},{eng:"We have found a solution.",esp:"Hemos encontrado una solución."}],
+  "Buy":    [{eng:"I buy groceries on Sundays.",esp:"Compro víveres los domingos."},{eng:"She bought a new dress.",esp:"Ella compró un vestido nuevo."},{eng:"He has bought a house.",esp:"Él ha comprado una casa."}],
+  "Cook":   [{eng:"I cook dinner every night.",esp:"Cocino la cena cada noche."},{eng:"She cooked a delicious meal.",esp:"Ella cocinó una comida deliciosa."},{eng:"He has cooked for twenty people.",esp:"Él ha cocinado para veinte personas."}],
+  "Travel": [{eng:"I travel every summer.",esp:"Viajo cada verano."},{eng:"She traveled to Paris last year.",esp:"Ella viajó a París el año pasado."},{eng:"We have traveled to many countries.",esp:"Hemos viajado a muchos países."}],
+  "Love":   [{eng:"I love my family.",esp:"Amo a mi familia."},{eng:"She loved the gift.",esp:"Ella amó el regalo."},{eng:"He has loved her for years.",esp:"Él la ha amado por años."}],
+  "Help":   [{eng:"I help my neighbors.",esp:"Ayudo a mis vecinos."},{eng:"She helped him carry the boxes.",esp:"Ella lo ayudó a cargar las cajas."},{eng:"We have helped many people.",esp:"Hemos ayudado a mucha gente."}],
+  "Learn":  [{eng:"I learn something new every day.",esp:"Aprendo algo nuevo cada día."},{eng:"She learned to swim last summer.",esp:"Ella aprendió a nadar el verano pasado."},{eng:"He has learned a lot.",esp:"Él ha aprendido mucho."}],
+  "Live":   [{eng:"I live in Santo Domingo.",esp:"Vivo en Santo Domingo."},{eng:"She lived in Spain for two years.",esp:"Ella vivió en España dos años."},{eng:"We have lived here since 2010.",esp:"Hemos vivido aquí desde 2010."}],
+};
+
+// Extended examples for all remaining verbs
+const EXAMPLES_EXTRA = {
+  "Arise":    [{eng:"Problems arise every day.",esp:"Los problemas surgen todos los días."},{eng:"A conflict arose between them.",esp:"Surgió un conflicto entre ellos."},{eng:"New opportunities have arisen.",esp:"Han surgido nuevas oportunidades."}],
+  "Awake":    [{eng:"I awake early on weekdays.",esp:"Me despierto temprano los días de semana."},{eng:"She awoke to a strange noise.",esp:"Ella se despertó por un ruido extraño."},{eng:"He has awoken feeling refreshed.",esp:"Él se ha despertado sintiéndose descansado."}],
+  "Bear":     [{eng:"I can bear the cold weather.",esp:"Puedo soportar el clima frío."},{eng:"She bore the pain with courage.",esp:"Ella soportó el dolor con valentía."},{eng:"He has borne a great responsibility.",esp:"Él ha cargado con una gran responsabilidad."}],
+  "Beat":     [{eng:"My heart beats fast when I run.",esp:"Mi corazón late rápido cuando corro."},{eng:"Our team beat the opponents.",esp:"Nuestro equipo derrotó a los contrincantes."},{eng:"She has beaten her personal record.",esp:"Ella ha superado su récord personal."}],
+  "Become":   [{eng:"I want to become a doctor.",esp:"Quiero llegar a ser médico."},{eng:"She became famous overnight.",esp:"Ella se hizo famosa de la noche a la mañana."},{eng:"He has become very successful.",esp:"Él se ha vuelto muy exitoso."}],
+  "Begin":    [{eng:"Classes begin at eight o'clock.",esp:"Las clases comienzan a las ocho."},{eng:"The movie began at seven.",esp:"La película comenzó a las siete."},{eng:"We have begun a new project.",esp:"Hemos comenzado un nuevo proyecto."}],
+  "Bend":     [{eng:"You should bend your knees.",esp:"Debes doblar las rodillas."},{eng:"He bent the wire into a circle.",esp:"Él dobló el alambre en un círculo."},{eng:"She has bent the rules before.",esp:"Ella ha doblado las reglas antes."}],
+  "Bet":      [{eng:"I bet you can do it.",esp:"Apuesto a que puedes hacerlo."},{eng:"He bet all his money on that horse.",esp:"Apostó todo su dinero en ese caballo."},{eng:"She has bet on the wrong team.",esp:"Ella ha apostado por el equipo equivocado."}],
+  "Bind":     [{eng:"We bind books in this workshop.",esp:"Encuadernamos libros en este taller."},{eng:"She bound the papers together.",esp:"Ella ató los papeles juntos."},{eng:"He has bound the wound carefully.",esp:"Él ha vendado la herida con cuidado."}],
+  "Bite":     [{eng:"Dogs sometimes bite strangers.",esp:"Los perros a veces muerden a extraños."},{eng:"The mosquito bit my arm.",esp:"El mosquito me mordió el brazo."},{eng:"She has bitten her nails again.",esp:"Ella se ha mordido las uñas otra vez."}],
+  "Bleed":    [{eng:"The wound continues to bleed.",esp:"La herida sigue sangrando."},{eng:"His nose bled after the fall.",esp:"Su nariz sangró después de la caída."},{eng:"She has bled a lot.",esp:"Ella ha sangrado mucho."}],
+  "Blow":     [{eng:"The wind blows from the north.",esp:"El viento sopla del norte."},{eng:"She blew out the candles.",esp:"Ella apagó las velas soplando."},{eng:"The storm has blown the roof off.",esp:"La tormenta ha arrancado el techo."}],
+  "Break":    [{eng:"Be careful not to break the glass.",esp:"Ten cuidado de no romper el vaso."},{eng:"He broke his arm playing soccer.",esp:"Él se rompió el brazo jugando fútbol."},{eng:"She has broken her promise.",esp:"Ella ha roto su promesa."}],
+  "Breed":    [{eng:"They breed horses on this farm.",esp:"Crían caballos en esta granja."},{eng:"The farm bred prize-winning cattle.",esp:"La granja crió ganado premiado."},{eng:"She has bred rare birds.",esp:"Ella ha criado aves raras."}],
+  "Bring":    [{eng:"Please bring your notebook to class.",esp:"Por favor trae tu cuaderno a clase."},{eng:"He brought flowers for his mother.",esp:"Él trajo flores para su madre."},{eng:"She has brought good news.",esp:"Ella ha traído buenas noticias."}],
+  "Build":    [{eng:"They build houses in this area.",esp:"Construyen casas en esta área."},{eng:"He built a treehouse for his kids.",esp:"Él construyó una casita en el árbol para sus hijos."},{eng:"She has built a successful business.",esp:"Ella ha construido un negocio exitoso."}],
+  "Burn":     [{eng:"The fire burns brightly.",esp:"El fuego arde brillantemente."},{eng:"She burned the old letters.",esp:"Ella quemó las cartas viejas."},{eng:"He has burnt the toast again.",esp:"Él ha quemado el pan tostado otra vez."}],
+  "Burst":    [{eng:"Balloons burst when you poke them.",esp:"Los globos revientan cuando los pinchas."},{eng:"The pipe burst during winter.",esp:"La tubería reventó durante el invierno."},{eng:"She has burst into tears.",esp:"Ella ha roto a llorar."}],
+  "Cast":     [{eng:"Fishermen cast their nets at dawn.",esp:"Los pescadores lanzan sus redes al amanecer."},{eng:"She cast a glance at the door.",esp:"Ella lanzó una mirada hacia la puerta."},{eng:"He has cast his vote.",esp:"Él ha emitido su voto."}],
+  "Catch":    [{eng:"I always catch the early bus.",esp:"Siempre tomo el autobús temprano."},{eng:"She caught a cold last week.",esp:"Ella se resfriaron la semana pasada."},{eng:"He has caught many fish today.",esp:"Él ha pescado muchos peces hoy."}],
+  "Choose":   [{eng:"You can choose any color you like.",esp:"Puedes elegir cualquier color que quieras."},{eng:"She chose the red dress.",esp:"Ella eligió el vestido rojo."},{eng:"We have chosen our team captain.",esp:"Hemos elegido a nuestro capitán de equipo."}],
+  "Cling":    [{eng:"Children cling to their parents.",esp:"Los niños se aferran a sus padres."},{eng:"She clung to the rope tightly.",esp:"Ella se aferró a la cuerda con fuerza."},{eng:"He has clung to that old belief.",esp:"Él se ha aferrado a esa vieja creencia."}],
+  "Cost":     [{eng:"This jacket costs fifty dollars.",esp:"Esta chaqueta cuesta cincuenta dólares."},{eng:"The repairs cost more than expected.",esp:"Las reparaciones costaron más de lo esperado."},{eng:"The project has cost a fortune.",esp:"El proyecto ha costado una fortuna."}],
+  "Creep":    [{eng:"Cats creep silently through the grass.",esp:"Los gatos se arrastran silenciosamente por el pasto."},{eng:"He crept into the room quietly.",esp:"Él entró sigilosamente a la habitación."},{eng:"Doubt has crept into his mind.",esp:"La duda se ha infiltrado en su mente."}],
+  "Cut":      [{eng:"Please cut the bread evenly.",esp:"Por favor corta el pan de manera uniforme."},{eng:"She cut her finger while cooking.",esp:"Ella se cortó el dedo mientras cocinaba."},{eng:"He has cut the grass today.",esp:"Él ha cortado el pasto hoy."}],
+  "Deal":     [{eng:"We deal with problems every day.",esp:"Tratamos problemas todos los días."},{eng:"She dealt with the situation calmly.",esp:"Ella manejó la situación con calma."},{eng:"He has dealt cards all night.",esp:"Él ha repartido cartas toda la noche."}],
+  "Dig":      [{eng:"Dogs dig holes in the yard.",esp:"Los perros cavan hoyos en el patio."},{eng:"Workers dug a trench in the road.",esp:"Los trabajadores cavaron una zanja en la calle."},{eng:"They have dug up old artifacts.",esp:"Han desenterrado artefactos antiguos."}],
+  "Draw":     [{eng:"I draw pictures in my free time.",esp:"Dibujo imágenes en mi tiempo libre."},{eng:"She drew a beautiful landscape.",esp:"Ella dibujó un hermoso paisaje."},{eng:"He has drawn the winning number.",esp:"Él ha sacado el número ganador."}],
+  "Dream":    [{eng:"I dream about traveling the world.",esp:"Sueño con viajar por el mundo."},{eng:"She dreamt of flying last night.",esp:"Ella soñó con volar anoche."},{eng:"He has dreamt the same dream twice.",esp:"Él ha tenido el mismo sueño dos veces."}],
+  "Drive":    [{eng:"I drive to work every morning.",esp:"Conduzco al trabajo cada mañana."},{eng:"She drove three hours to the coast.",esp:"Ella condujo tres horas hasta la costa."},{eng:"He has driven that car for years.",esp:"Él ha conducido ese auto por años."}],
+  "Fall":     [{eng:"Leaves fall in autumn.",esp:"Las hojas caen en otoño."},{eng:"She fell asleep on the couch.",esp:"Ella se quedó dormida en el sofá."},{eng:"He has fallen behind in his studies.",esp:"Él se ha atrasado en sus estudios."}],
+  "Feed":     [{eng:"I feed my cat twice a day.",esp:"Alimento a mi gato dos veces al día."},{eng:"She fed the ducks at the park.",esp:"Ella alimentó a los patos en el parque."},{eng:"We have fed all the animals.",esp:"Hemos alimentado a todos los animales."}],
+  "Feel":     [{eng:"I feel happy when I see you.",esp:"Me siento feliz cuando te veo."},{eng:"She felt nervous before the exam.",esp:"Ella se sintió nerviosa antes del examen."},{eng:"He has felt better since yesterday.",esp:"Él se ha sentido mejor desde ayer."}],
+  "Fight":    [{eng:"We must fight for our rights.",esp:"Debemos luchar por nuestros derechos."},{eng:"They fought over the last piece of cake.",esp:"Ellos pelearon por el último pedazo de pastel."},{eng:"She has fought many battles in life.",esp:"Ella ha librado muchas batallas en la vida."}],
+  "Flee":     [{eng:"Animals flee from predators.",esp:"Los animales huyen de los depredadores."},{eng:"The thief fled when he saw the police.",esp:"El ladrón huyó cuando vio a la policía."},{eng:"The refugees have fled their country.",esp:"Los refugiados han huido de su país."}],
+  "Fly":      [{eng:"Birds fly south in winter.",esp:"Los pájaros vuelan al sur en invierno."},{eng:"We flew to New York last month.",esp:"Volamos a Nueva York el mes pasado."},{eng:"She has flown on a plane before.",esp:"Ella ha volado en avión antes."}],
+  "Forbid":   [{eng:"I forbid you to go out tonight.",esp:"Te prohíbo salir esta noche."},{eng:"The teacher forbade the use of phones.",esp:"La maestra prohibió el uso de teléfonos."},{eng:"Smoking has been forbidden here.",esp:"Fumar ha sido prohibido aquí."}],
+  "Forget":   [{eng:"I always forget my keys.",esp:"Siempre olvido mis llaves."},{eng:"She forgot her appointment.",esp:"Ella olvidó su cita."},{eng:"He has forgotten her birthday again.",esp:"Él ha olvidado su cumpleaños otra vez."}],
+  "Forgive":  [{eng:"We must learn to forgive others.",esp:"Debemos aprender a perdonar a los demás."},{eng:"She forgave him for his mistake.",esp:"Ella lo perdonó por su error."},{eng:"He has forgiven everyone who hurt him.",esp:"Él ha perdonado a todos los que le lastimaron."}],
+  "Freeze":   [{eng:"Water freezes at zero degrees.",esp:"El agua se congela a cero grados."},{eng:"The pipes froze overnight.",esp:"Las tuberías se congelaron durante la noche."},{eng:"The lake has frozen solid.",esp:"El lago se ha congelado por completo."}],
+  "Give":     [{eng:"I give money to charity.",esp:"Doy dinero a la caridad."},{eng:"She gave me a wonderful gift.",esp:"Ella me dio un regalo maravilloso."},{eng:"He has given his best effort.",esp:"Él ha dado su mejor esfuerzo."}],
+  "Grind":    [{eng:"We grind coffee every morning.",esp:"Molemos café cada mañana."},{eng:"She ground the spices by hand.",esp:"Ella molió las especias a mano."},{eng:"He has ground his teeth while sleeping.",esp:"Él ha rechinar los dientes al dormir."}],
+  "Grow":     [{eng:"Children grow very quickly.",esp:"Los niños crecen muy rápido."},{eng:"She grew tomatoes in her garden.",esp:"Ella cultivó tomates en su jardín."},{eng:"The company has grown a lot.",esp:"La empresa ha crecido mucho."}],
+  "Hang":     [{eng:"I hang my coat by the door.",esp:"Cuelgo mi abrigo junto a la puerta."},{eng:"She hung a painting on the wall.",esp:"Ella colgó un cuadro en la pared."},{eng:"He has hung the decorations already.",esp:"Él ya ha colgado las decoraciones."}],
+  "Hear":     [{eng:"I hear music coming from outside.",esp:"Escucho música que viene de afuera."},{eng:"She heard strange noises at night.",esp:"Ella escuchó ruidos extraños por la noche."},{eng:"We have heard great things about you.",esp:"Hemos escuchado grandes cosas sobre ti."}],
+  "Hide":     [{eng:"Children love to hide and seek.",esp:"A los niños les encanta esconderse."},{eng:"She hid the presents under the bed.",esp:"Ella escondió los regalos debajo de la cama."},{eng:"He has hidden the key somewhere.",esp:"Él ha escondido la llave en algún lugar."}],
+  "Hit":      [{eng:"She hit the ball hard.",esp:"Ella golpeó la pelota con fuerza."},{eng:"The car hit a tree last night.",esp:"El auto chocó contra un árbol anoche."},{eng:"That song has hit number one.",esp:"Esa canción ha llegado al número uno."}],
+  "Hold":     [{eng:"Hold my hand when we cross the street.",esp:"Toma mi mano cuando cruzamos la calle."},{eng:"She held the baby gently.",esp:"Ella sostuvo al bebé con suavidad."},{eng:"We have held this meeting every year.",esp:"Hemos celebrado esta reunión cada año."}],
+  "Hurt":     [{eng:"It hurts when I walk too much.",esp:"Me duele cuando camino demasiado."},{eng:"She hurt her ankle at practice.",esp:"Ella se lastimó el tobillo en el entrenamiento."},{eng:"His words have hurt her feelings.",esp:"Sus palabras han herido sus sentimientos."}],
+  "Keep":     [{eng:"I keep a diary every day.",esp:"Mantengo un diario todos los días."},{eng:"She kept her promise to him.",esp:"Ella cumplió su promesa."},{eng:"He has kept all her letters.",esp:"Él ha guardado todas sus cartas."}],
+  "Kneel":    [{eng:"We kneel during prayer.",esp:"Nos arrodillamos durante la oración."},{eng:"She knelt beside the injured dog.",esp:"Ella se arrodilló junto al perro herido."},{eng:"He has knelt before the altar.",esp:"Él se ha arrodillado ante el altar."}],
+  "Knit":     [{eng:"My grandmother knits every evening.",esp:"Mi abuela teje todas las noches."},{eng:"She knit a sweater for the baby.",esp:"Ella tejió un suéter para el bebé."},{eng:"He has knit a warm scarf.",esp:"Él ha tejido una bufanda cálida."}],
+  "Lay":      [{eng:"Hens lay eggs in the morning.",esp:"Las gallinas ponen huevos por la mañana."},{eng:"She laid the book on the table.",esp:"Ella puso el libro sobre la mesa."},{eng:"The workers have laid new tiles.",esp:"Los trabajadores han puesto baldosas nuevas."}],
+  "Lead":     [{eng:"Good leaders lead by example.",esp:"Los buenos líderes lideran con el ejemplo."},{eng:"She led the team to victory.",esp:"Ella llevó al equipo a la victoria."},{eng:"He has led the department for five years.",esp:"Él ha dirigido el departamento por cinco años."}],
+  "Leave":    [{eng:"I leave home at seven every day.",esp:"Salgo de casa a las siete todos los días."},{eng:"She left her job last month.",esp:"Ella dejó su trabajo el mes pasado."},{eng:"They have left already.",esp:"Ya se han ido."}],
+  "Lend":     [{eng:"Can you lend me your pen?",esp:"¿Puedes prestarme tu bolígrafo?"},{eng:"He lent his car to a friend.",esp:"Él le prestó su auto a un amigo."},{eng:"She has lent him money before.",esp:"Ella le ha prestado dinero antes."}],
+  "Let":      [{eng:"Let me help you with that.",esp:"Déjame ayudarte con eso."},{eng:"She let him borrow her umbrella.",esp:"Ella le dejó tomar prestado su paraguas."},{eng:"They have let the dog inside.",esp:"Han dejado entrar al perro."}],
+  "Lie":      [{eng:"I lie down after lunch.",esp:"Me recuesto después del almuerzo."},{eng:"She lay on the grass watching clouds.",esp:"Ella se tumbó en el pasto mirando las nubes."},{eng:"The keys have lain there all day.",esp:"Las llaves han estado ahí todo el día."}],
+  "Light":    [{eng:"Let's light some candles.",esp:"Encendamos algunas velas."},{eng:"She lit the fireplace.",esp:"Ella encendió la chimenea."},{eng:"He has lit the path for others.",esp:"Él ha iluminado el camino para otros."}],
+  "Lose":     [{eng:"I always lose my glasses.",esp:"Siempre pierdo mis gafas."},{eng:"Our team lost the final game.",esp:"Nuestro equipo perdió el partido final."},{eng:"She has lost ten pounds.",esp:"Ella ha perdido diez libras."}],
+  "Make":     [{eng:"I make breakfast every morning.",esp:"Preparo el desayuno cada mañana."},{eng:"She made a beautiful cake.",esp:"Ella hizo un hermoso pastel."},{eng:"He has made a big mistake.",esp:"Él ha cometido un gran error."}],
+  "Mean":     [{eng:"What does this word mean?",esp:"¿Qué significa esta palabra?"},{eng:"She meant to call you yesterday.",esp:"Ella tenía la intención de llamarte ayer."},{eng:"I have meant every word I said.",esp:"He dicho en serio cada palabra."}],
+  "Meet":     [{eng:"I meet new people at work.",esp:"Conozco gente nueva en el trabajo."},{eng:"We met at a coffee shop.",esp:"Nos conocimos en una cafetería."},{eng:"Have you met my sister before?",esp:"¿Has conocido a mi hermana antes?"}],
+  "Mistake":  [{eng:"I often mistake him for his brother.",esp:"A menudo lo confundo con su hermano."},{eng:"She mistook salt for sugar.",esp:"Ella confundió la sal con el azúcar."},{eng:"He has mistaken the address.",esp:"Él ha confundido la dirección."}],
+  "Overcome": [{eng:"You can overcome any challenge.",esp:"Puedes superar cualquier desafío."},{eng:"She overcame her fear of heights.",esp:"Ella superó su miedo a las alturas."},{eng:"He has overcome many obstacles.",esp:"Él ha superado muchos obstáculos."}],
+  "Pay":      [{eng:"I pay my bills on time.",esp:"Pago mis facturas a tiempo."},{eng:"She paid for dinner last night.",esp:"Ella pagó la cena anoche."},{eng:"He has paid all his debts.",esp:"Él ha pagado todas sus deudas."}],
+  "Put":      [{eng:"Please put the dishes away.",esp:"Por favor guarda los platos."},{eng:"She put the keys on the table.",esp:"Ella puso las llaves en la mesa."},{eng:"He has put a lot of effort into this.",esp:"Él ha puesto mucho esfuerzo en esto."}],
+  "Ride":     [{eng:"I ride my bike to work.",esp:"Voy al trabajo en bicicleta."},{eng:"She rode a horse for the first time.",esp:"Ella montó a caballo por primera vez."},{eng:"We have ridden this trail before.",esp:"Hemos recorrido este sendero antes."}],
+  "Ring":     [{eng:"The church bells ring every hour.",esp:"Las campanas de la iglesia suenan cada hora."},{eng:"She rang the doorbell twice.",esp:"Ella tocó el timbre dos veces."},{eng:"He has rung me several times.",esp:"Él me ha llamado varias veces."}],
+  "Rise":     [{eng:"The sun rises in the east.",esp:"El sol sale por el este."},{eng:"Prices rose sharply last year.",esp:"Los precios subieron drásticamente el año pasado."},{eng:"She has risen to the top of her field.",esp:"Ella ha llegado a la cima en su campo."}],
+  "Say":      [{eng:"What did you say?",esp:"¿Qué dijiste?"},{eng:"She said goodbye and left.",esp:"Ella dijo adiós y se fue."},{eng:"He has said his last words.",esp:"Él ha dicho sus últimas palabras."}],
+  "Seek":     [{eng:"We always seek the truth.",esp:"Siempre buscamos la verdad."},{eng:"He sought advice from his mentor.",esp:"Él buscó consejo de su mentor."},{eng:"She has sought help many times.",esp:"Ella ha buscado ayuda muchas veces."}],
+  "Sell":     [{eng:"They sell fresh fruit here.",esp:"Aquí venden fruta fresca."},{eng:"She sold her old car.",esp:"Ella vendió su auto viejo."},{eng:"He has sold his house.",esp:"Él ha vendido su casa."}],
+  "Send":     [{eng:"I send emails every day.",esp:"Envío correos electrónicos todos los días."},{eng:"She sent a postcard from Paris.",esp:"Ella envió una postal desde París."},{eng:"We have sent the package already.",esp:"Ya hemos enviado el paquete."}],
+  "Set":      [{eng:"Set the table, please.",esp:"Pon la mesa, por favor."},{eng:"The sun set at six o'clock.",esp:"El sol se puso a las seis."},{eng:"She has set a new world record.",esp:"Ella ha establecido un nuevo récord mundial."}],
+  "Shake":    [{eng:"Shake the bottle before using.",esp:"Agita la botella antes de usar."},{eng:"She shook his hand firmly.",esp:"Ella le dio la mano firmemente."},{eng:"He has shaken the whole team up.",esp:"Él ha sacudido a todo el equipo."}],
+  "Shine":    [{eng:"The stars shine brightly tonight.",esp:"Las estrellas brillan con fuerza esta noche."},{eng:"The sun shone all afternoon.",esp:"El sol brilló toda la tarde."},{eng:"She has shone in every performance.",esp:"Ella ha brillado en cada actuación."}],
+  "Shoot":    [{eng:"Basketball players shoot the ball.",esp:"Los jugadores de baloncesto lanzan el balón."},{eng:"He shot the arrow perfectly.",esp:"Él lanzó la flecha perfectamente."},{eng:"The director has shot the final scene.",esp:"El director ha rodado la escena final."}],
+  "Show":     [{eng:"I will show you how it works.",esp:"Te mostraré cómo funciona."},{eng:"She showed me her photos.",esp:"Ella me mostró sus fotos."},{eng:"He has shown great courage.",esp:"Él ha demostrado gran valentía."}],
+  "Shrink":   [{eng:"Wool sweaters shrink in hot water.",esp:"Los suéteres de lana encogen en agua caliente."},{eng:"The shirt shrank in the dryer.",esp:"La camisa encogió en la secadora."},{eng:"The budget has shrunk this year.",esp:"El presupuesto se ha reducido este año."}],
+  "Shut":     [{eng:"Please shut the door quietly.",esp:"Por favor cierra la puerta con cuidado."},{eng:"She shut the window before the rain.",esp:"Ella cerró la ventana antes de la lluvia."},{eng:"The store has shut down.",esp:"La tienda ha cerrado."}],
+  "Sing":     [{eng:"Birds sing at dawn.",esp:"Los pájaros cantan al amanecer."},{eng:"She sang a beautiful song.",esp:"Ella cantó una hermosa canción."},{eng:"He has sung in many concerts.",esp:"Él ha cantado en muchos conciertos."}],
+  "Sink":     [{eng:"Heavy objects sink in water.",esp:"Los objetos pesados se hunden en el agua."},{eng:"The boat sank during the storm.",esp:"El bote se hundió durante la tormenta."},{eng:"Our hopes have sunk.",esp:"Nuestras esperanzas se han hundido."}],
+  "Sit":      [{eng:"Please sit down and relax.",esp:"Por favor siéntate y relájate."},{eng:"She sat by the window reading.",esp:"Ella se sentó junto a la ventana leyendo."},{eng:"He has sat there for hours.",esp:"Él ha estado sentado ahí por horas."}],
+  "Slide":    [{eng:"Kids love to slide in the park.",esp:"A los niños les encanta resbalar en el parque."},{eng:"She slid on the icy sidewalk.",esp:"Ella resbaló en la acera helada."},{eng:"Prices have slid down this month.",esp:"Los precios han bajado este mes."}],
+  "Speed":    [{eng:"Don't speed on this road.",esp:"No aceleres en esta carretera."},{eng:"The car sped away after the accident.",esp:"El auto se alejó a toda velocidad tras el accidente."},{eng:"She has sped through all her tasks.",esp:"Ella ha completado todas sus tareas rápidamente."}],
+  "Spend":    [{eng:"I spend Sundays with my family.",esp:"Paso los domingos con mi familia."},{eng:"He spent all his savings on a trip.",esp:"Él gastó todos sus ahorros en un viaje."},{eng:"We have spent too much this month.",esp:"Hemos gastado demasiado este mes."}],
+  "Spin":     [{eng:"Spiders spin their webs at night.",esp:"Las arañas tejen sus telas por la noche."},{eng:"The ballerina spun gracefully.",esp:"La bailarina giró con gracia."},{eng:"The wheel has spun many times.",esp:"La rueda ha girado muchas veces."}],
+  "Split":    [{eng:"Let's split the bill.",esp:"Dividamos la cuenta."},{eng:"She split the apple in half.",esp:"Ella partió la manzana por la mitad."},{eng:"They have split up.",esp:"Ellos se han separado."}],
+  "Spread":   [{eng:"Spread the butter on the toast.",esp:"Unta la mantequilla en el pan tostado."},{eng:"The news spread quickly.",esp:"La noticia se extendió rápidamente."},{eng:"The disease has spread to other cities.",esp:"La enfermedad se ha extendido a otras ciudades."}],
+  "Spring":   [{eng:"Athletes spring over hurdles.",esp:"Los atletas saltan sobre los obstáculos."},{eng:"The cat sprang onto the chair.",esp:"El gato saltó sobre la silla."},{eng:"A leak has sprung in the pipe.",esp:"Ha surgido una fuga en la tubería."}],
+  "Stand":    [{eng:"Stand up when the teacher enters.",esp:"Levántate cuando el maestro entre."},{eng:"She stood in line for an hour.",esp:"Ella esperó en la fila durante una hora."},{eng:"He has stood by her side always.",esp:"Él siempre ha estado a su lado."}],
+  "Steal":    [{eng:"It is wrong to steal.",esp:"Está mal robar."},{eng:"Someone stole my wallet.",esp:"Alguien me robó la cartera."},{eng:"He has stolen before.",esp:"Él ha robado antes."}],
+  "Stick":    [{eng:"Stick the stamp on the envelope.",esp:"Pega el sello en el sobre."},{eng:"The gum stuck to my shoe.",esp:"El chicle se pegó a mi zapato."},{eng:"She has stuck to her diet.",esp:"Ella se ha ceñido a su dieta."}],
+  "Sting":    [{eng:"Bees sting when they feel threatened.",esp:"Las abejas pican cuando se sienten amenazadas."},{eng:"The jellyfish stung her leg.",esp:"La medusa le picó la pierna."},{eng:"His comment has stung her pride.",esp:"Su comentario ha herido su orgullo."}],
+  "Strike":   [{eng:"Lightning can strike twice.",esp:"El rayo puede caer dos veces."},{eng:"The clock struck midnight.",esp:"El reloj dio las doce de la noche."},{eng:"A new idea has struck me.",esp:"Se me ha ocurrido una nueva idea."}],
+  "Swear":    [{eng:"I swear to tell the truth.",esp:"Juro decir la verdad."},{eng:"She swore she was innocent.",esp:"Ella juró que era inocente."},{eng:"He has sworn loyalty to the king.",esp:"Él ha jurado lealtad al rey."}],
+  "Sweep":    [{eng:"I sweep the floor every morning.",esp:"Barres el suelo cada mañana."},{eng:"She swept the kitchen after dinner.",esp:"Ella barrió la cocina después de cenar."},{eng:"He has swept all the leaves away.",esp:"Él ha barrido todas las hojas."}],
+  "Swim":     [{eng:"I swim in the pool every Sunday.",esp:"Nado en la piscina todos los domingos."},{eng:"She swam across the lake.",esp:"Ella cruzó el lago nadando."},{eng:"He has swum five kilometers today.",esp:"Él ha nadado cinco kilómetros hoy."}],
+  "Swing":    [{eng:"Children love to swing in the park.",esp:"A los niños les encanta columpiarse en el parque."},{eng:"She swung her arms as she walked.",esp:"Ella balanceó los brazos al caminar."},{eng:"He has swung that bat all season.",esp:"Él ha bateado toda la temporada."}],
+  "Teach":    [{eng:"She teaches English at a school.",esp:"Ella enseña inglés en una escuela."},{eng:"My father taught me to ride a bike.",esp:"Mi padre me enseñó a andar en bicicleta."},{eng:"She has taught hundreds of students.",esp:"Ella ha enseñado a cientos de estudiantes."}],
+  "Tear":     [{eng:"Be careful not to tear the paper.",esp:"Ten cuidado de no rasgar el papel."},{eng:"She tore the letter into pieces.",esp:"Ella rompió la carta en pedazos."},{eng:"He has torn his jacket.",esp:"Él ha rasgado su chaqueta."}],
+  "Tell":     [{eng:"Tell me what happened.",esp:"Dime lo que pasó."},{eng:"She told a funny story.",esp:"Ella contó una historia graciosa."},{eng:"He has told the truth.",esp:"Él ha dicho la verdad."}],
+  "Throw":    [{eng:"Throw the ball to me.",esp:"Lánzame la pelota."},{eng:"She threw away the old magazines.",esp:"Ella tiró las revistas viejas."},{eng:"He has thrown his chance away.",esp:"Él ha desperdiciado su oportunidad."}],
+  "Understand":[{eng:"I understand your point.",esp:"Entiendo tu punto."},{eng:"She understood the instructions.",esp:"Ella entendió las instrucciones."},{eng:"We have understood the problem.",esp:"Hemos comprendido el problema."}],
+  "Wake":     [{eng:"I wake up at six every morning.",esp:"Me despierto a las seis cada mañana."},{eng:"She woke him up gently.",esp:"Ella lo despertó con suavidad."},{eng:"He has woken up late today.",esp:"Él se ha despertado tarde hoy."}],
+  "Wear":     [{eng:"I wear a uniform at work.",esp:"Llevo puesto un uniforme en el trabajo."},{eng:"She wore a red dress to the party.",esp:"Ella llevó un vestido rojo a la fiesta."},{eng:"He has worn that hat for years.",esp:"Él ha llevado ese sombrero por años."}],
+  "Weep":     [{eng:"She weeps when she is very sad.",esp:"Ella llora cuando está muy triste."},{eng:"He wept at his grandfather's funeral.",esp:"Él lloró en el funeral de su abuelo."},{eng:"She has wept all night.",esp:"Ella ha llorado toda la noche."}],
+  "Win":      [{eng:"We play to win every game.",esp:"Jugamos para ganar cada partido."},{eng:"She won the spelling contest.",esp:"Ella ganó el concurso de ortografía."},{eng:"He has won three gold medals.",esp:"Él ha ganado tres medallas de oro."}],
+  // Regular verbs
+  "Accept":   [{eng:"I accept your apology.",esp:"Acepto tu disculpa."},{eng:"She accepted the job offer.",esp:"Ella aceptó la oferta de trabajo."},{eng:"He has accepted the challenge.",esp:"Él ha aceptado el desafío."}],
+  "Count":    [{eng:"Count to ten slowly.",esp:"Cuenta hasta diez despacio."},{eng:"She counted all the students.",esp:"Ella contó a todos los estudiantes."},{eng:"We have counted every vote.",esp:"Hemos contado cada voto."}],
+  "Date":     [{eng:"We date every Friday night.",esp:"Salimos cada viernes por la noche."},{eng:"They dated for two years.",esp:"Salieron juntos por dos años."},{eng:"She has dated him since last year.",esp:"Ella ha salido con él desde el año pasado."}],
+  "End":      [{eng:"All good things must end.",esp:"Todas las cosas buenas deben terminar."},{eng:"The show ended at midnight.",esp:"El espectáculo terminó a medianoche."},{eng:"The meeting has ended.",esp:"La reunión ha terminado."}],
+  "Expect":   [{eng:"I expect good results.",esp:"Espero buenos resultados."},{eng:"She expected him to call.",esp:"Ella esperaba que él llamara."},{eng:"We have expected this for a while.",esp:"Lo hemos esperado por un tiempo."}],
+  "Intend":   [{eng:"I intend to study medicine.",esp:"Tengo la intención de estudiar medicina."},{eng:"She intended to leave early.",esp:"Ella tenía intención de salir temprano."},{eng:"He has intended no harm.",esp:"Él no ha pretendido hacer daño."}],
+  "Need":     [{eng:"I need more time to finish.",esp:"Necesito más tiempo para terminar."},{eng:"She needed help moving.",esp:"Ella necesitaba ayuda para mudarse."},{eng:"He has needed support all along.",esp:"Él ha necesitado apoyo todo el tiempo."}],
+  "Plant":    [{eng:"We plant flowers every spring.",esp:"Plantamos flores cada primavera."},{eng:"She planted tomatoes in her garden.",esp:"Ella plantó tomates en su jardín."},{eng:"He has planted a hundred trees.",esp:"Él ha plantado cien árboles."}],
+  "Point":    [{eng:"Don't point at people.",esp:"No señales a las personas."},{eng:"She pointed at the map.",esp:"Ella señaló el mapa."},{eng:"He has pointed out the mistake.",esp:"Él ha señalado el error."}],
+  "Rent":     [{eng:"I rent an apartment downtown.",esp:"Alquilo un apartamento en el centro."},{eng:"They rented a car for the trip.",esp:"Ellos alquilaron un auto para el viaje."},{eng:"She has rented that flat for years.",esp:"Ella ha alquilado ese apartamento por años."}],
+  "Repeat":   [{eng:"Please repeat the question.",esp:"Por favor repite la pregunta."},{eng:"She repeated the instructions twice.",esp:"Ella repitió las instrucciones dos veces."},{eng:"He has repeated the same mistake.",esp:"Él ha repetido el mismo error."}],
+  "Start":    [{eng:"Let's start the meeting.",esp:"Comencemos la reunión."},{eng:"She started a new business.",esp:"Ella inició un nuevo negocio."},{eng:"He has started his diet.",esp:"Él ha empezado su dieta."}],
+  "Visit":    [{eng:"I visit my grandmother on weekends.",esp:"Visito a mi abuela los fines de semana."},{eng:"She visited Rome last summer.",esp:"Ella visitó Roma el verano pasado."},{eng:"We have visited twenty countries.",esp:"Hemos visitado veinte países."}],
+  "Wait":     [{eng:"Wait here until I come back.",esp:"Espera aquí hasta que vuelva."},{eng:"She waited for an hour.",esp:"Ella esperó durante una hora."},{eng:"We have waited long enough.",esp:"Hemos esperado suficiente."}],
+  "Want":     [{eng:"I want a cup of coffee.",esp:"Quiero una taza de café."},{eng:"She wanted to be a teacher.",esp:"Ella quería ser maestra."},{eng:"He has wanted this for years.",esp:"Él ha querido esto por años."}],
+  "Dress":    [{eng:"I dress formally for work.",esp:"Me visto formalmente para el trabajo."},{eng:"She dressed the children quickly.",esp:"Ella vistió a los niños rápidamente."},{eng:"He has dressed himself already.",esp:"Él ya se ha vestido."}],
+  "Finish":   [{eng:"I finish work at five.",esp:"Termino el trabajo a las cinco."},{eng:"She finished her homework early.",esp:"Ella terminó su tarea temprano."},{eng:"He has finished the project.",esp:"Él ha terminado el proyecto."}],
+  "Jump":     [{eng:"The kids love to jump rope.",esp:"A los niños les encanta saltar la cuerda."},{eng:"She jumped over the puddle.",esp:"Ella saltó sobre el charco."},{eng:"He has jumped out of a plane before.",esp:"Él ha saltado de un avión antes."}],
+  "Like":     [{eng:"I like chocolate ice cream.",esp:"Me gusta el helado de chocolate."},{eng:"She liked the movie a lot.",esp:"A ella le gustó mucho la película."},{eng:"He has liked her posts all week.",esp:"Él le ha dado me gusta a sus publicaciones toda la semana."}],
+  "Look":     [{eng:"Look at that beautiful sunset.",esp:"Mira ese hermoso atardecer."},{eng:"She looked out the window.",esp:"Ella miró por la ventana."},{eng:"We have looked everywhere for it.",esp:"Lo hemos buscado por todas partes."}],
+  "Miss":     [{eng:"I miss my family when I travel.",esp:"Echo de menos a mi familia cuando viajo."},{eng:"She missed the last train.",esp:"Ella perdió el último tren."},{eng:"He has missed many classes.",esp:"Él ha faltado a muchas clases."}],
+  "Push":     [{eng:"Push the door to open it.",esp:"Empuja la puerta para abrirla."},{eng:"She pushed the cart down the aisle.",esp:"Ella empujó el carrito por el pasillo."},{eng:"He has pushed himself very hard.",esp:"Él se ha exigido mucho."}],
+  "Shop":     [{eng:"I shop for groceries on Saturdays.",esp:"Compro comida los sábados."},{eng:"She shopped for hours at the mall.",esp:"Ella compró durante horas en el centro comercial."},{eng:"We have shopped at that store for years.",esp:"Hemos comprado en esa tienda por años."}],
+  "Stop":     [{eng:"Stop the car here, please.",esp:"Para el carro aquí, por favor."},{eng:"She stopped smoking last year.",esp:"Ella dejó de fumar el año pasado."},{eng:"He has stopped going to the gym.",esp:"Él ha dejado de ir al gimnasio."}],
+  "Use":      [{eng:"I use my phone for everything.",esp:"Uso mi teléfono para todo."},{eng:"She used the last of the sugar.",esp:"Ella usó el último azúcar."},{eng:"He has used that technique before.",esp:"Él ha usado esa técnica antes."}],
+  "Wash":     [{eng:"I wash my hair every day.",esp:"Me lavo el cabello todos los días."},{eng:"She washed all the dishes.",esp:"Ella lavó todos los platos."},{eng:"He has washed the car already.",esp:"Él ya ha lavado el carro."}],
+  "Wish":     [{eng:"I wish you good luck.",esp:"Te deseo buena suerte."},{eng:"She wished him a happy birthday.",esp:"Ella le deseó un feliz cumpleaños."},{eng:"He has wished for that all his life.",esp:"Él ha deseado eso toda su vida."}],
+  "Answer":   [{eng:"Please answer the phone.",esp:"Por favor contesta el teléfono."},{eng:"She answered all the questions.",esp:"Ella respondió todas las preguntas."},{eng:"He has answered correctly.",esp:"Él ha respondido correctamente."}],
+  "Arrive":   [{eng:"I always arrive on time.",esp:"Siempre llego a tiempo."},{eng:"She arrived late to the meeting.",esp:"Ella llegó tarde a la reunión."},{eng:"The package has arrived.",esp:"El paquete ha llegado."}],
+  "Belong":   [{eng:"This book belongs to me.",esp:"Este libro me pertenece."},{eng:"That jacket belonged to my grandfather.",esp:"Esa chaqueta le pertenecía a mi abuelo."},{eng:"She has always belonged here.",esp:"Ella siempre ha pertenecido aquí."}],
+  "Change":   [{eng:"People can change if they want to.",esp:"Las personas pueden cambiar si quieren."},{eng:"She changed her hairstyle.",esp:"Ella cambió su peinado."},{eng:"Things have changed a lot.",esp:"Las cosas han cambiado mucho."}],
+  "Clean":    [{eng:"I clean my room every Sunday.",esp:"Limpio mi habitación cada domingo."},{eng:"She cleaned the kitchen thoroughly.",esp:"Ella limpió la cocina a fondo."},{eng:"He has cleaned the whole house.",esp:"Él ha limpiado toda la casa."}],
+  "Climb":    [{eng:"I climb stairs instead of taking the elevator.",esp:"Subo las escaleras en lugar de tomar el ascensor."},{eng:"She climbed the mountain last summer.",esp:"Ella escaló la montaña el verano pasado."},{eng:"They have climbed every peak in the area.",esp:"Han escalado todos los picos del área."}],
+  "Close":    [{eng:"Please close the window.",esp:"Por favor cierra la ventana."},{eng:"She closed the deal successfully.",esp:"Ella cerró el trato con éxito."},{eng:"The bank has closed its doors.",esp:"El banco ha cerrado sus puertas."}],
+  "Consider": [{eng:"Consider all your options first.",esp:"Considera todas tus opciones primero."},{eng:"She considered moving to another city.",esp:"Ella consideró mudarse a otra ciudad."},{eng:"We have considered your proposal.",esp:"Hemos considerado tu propuesta."}],
+  "Deliver":  [{eng:"They deliver groceries to your door.",esp:"Entregan comida a domicilio."},{eng:"The courier delivered the package.",esp:"El mensajero entregó el paquete."},{eng:"She has delivered excellent results.",esp:"Ella ha entregado excelentes resultados."}],
+  "Enjoy":    [{eng:"I enjoy reading in the evening.",esp:"Disfruto leer en las noches."},{eng:"We enjoyed the concert a lot.",esp:"Disfrutamos mucho el concierto."},{eng:"She has enjoyed every moment.",esp:"Ella ha disfrutado cada momento."}],
+  "Fill":     [{eng:"Fill the glass with water.",esp:"Llena el vaso con agua."},{eng:"She filled out the application form.",esp:"Ella llenó el formulario de solicitud."},{eng:"He has filled the tank.",esp:"Él ha llenado el tanque."}],
+  "Follow":   [{eng:"Follow the instructions carefully.",esp:"Sigue las instrucciones con cuidado."},{eng:"She followed the recipe step by step.",esp:"Ella siguió la receta paso a paso."},{eng:"He has followed that team for years.",esp:"Él ha seguido a ese equipo por años."}],
+  "Hurry":    [{eng:"Hurry up or we'll be late.",esp:"Date prisa o llegaremos tarde."},{eng:"She hurried to catch the bus.",esp:"Ella se apresuró para tomar el autobús."},{eng:"We have hurried all day.",esp:"Hemos tenido prisa todo el día."}],
+  "Open":     [{eng:"Open the door for our guests.",esp:"Abre la puerta para nuestros invitados."},{eng:"She opened a new savings account.",esp:"Ella abrió una nueva cuenta de ahorros."},{eng:"He has opened his own restaurant.",esp:"Él ha abierto su propio restaurante."}],
+  "Order":    [{eng:"I always order the same dish.",esp:"Siempre pido el mismo plato."},{eng:"She ordered pizza for everyone.",esp:"Ella pidió pizza para todos."},{eng:"He has ordered new furniture.",esp:"Él ha pedido muebles nuevos."}],
+  "Plan":     [{eng:"I plan everything in advance.",esp:"Planifico todo con anticipación."},{eng:"She planned a surprise party.",esp:"Ella planeó una fiesta sorpresa."},{eng:"We have planned this trip for months.",esp:"Hemos planeado este viaje por meses."}],
+  "Rain":     [{eng:"It rains a lot in spring.",esp:"Llueve mucho en primavera."},{eng:"It rained all day yesterday.",esp:"Llovió todo el día ayer."},{eng:"It has rained for three days straight.",esp:"Ha llovido tres días seguidos."}],
+  "Remember": [{eng:"I remember my first day of school.",esp:"Recuerdo mi primer día de escuela."},{eng:"She remembered to buy milk.",esp:"Ella recordó comprar leche."},{eng:"He has remembered every detail.",esp:"Él ha recordado cada detalle."}],
+  "Stay":     [{eng:"Please stay with me.",esp:"Por favor quédate conmigo."},{eng:"She stayed at a nice hotel.",esp:"Ella se quedó en un buen hotel."},{eng:"They have stayed friends all these years.",esp:"Han permanecido amigos todos estos años."}],
+  "Turn":     [{eng:"Turn left at the next corner.",esp:"Dobla a la izquierda en la próxima esquina."},{eng:"She turned off the lights.",esp:"Ella apagó las luces."},{eng:"The caterpillar has turned into a butterfly.",esp:"La oruga se ha convertido en mariposa."}],
+  "Try":      [{eng:"Always try your best.",esp:"Siempre haz tu mejor esfuerzo."},{eng:"She tried the new restaurant downtown.",esp:"Ella probó el nuevo restaurante del centro."},{eng:"We have tried everything possible.",esp:"Hemos intentado todo lo posible."}],
+  "Practice": [{eng:"Practice makes perfect.",esp:"La práctica hace al maestro."},{eng:"She practiced the piano every day.",esp:"Ella practicó el piano todos los días."},{eng:"He has practiced for months.",esp:"Él ha practicado durante meses."}],
+  "Dance":    [{eng:"I dance salsa on weekends.",esp:"Bailo salsa los fines de semana."},{eng:"They danced all night.",esp:"Ellos bailaron toda la noche."},{eng:"She has danced since she was a child.",esp:"Ella ha bailado desde niña."}],
+  "Ask":      [{eng:"Don't be afraid to ask questions.",esp:"No tengas miedo de hacer preguntas."},{eng:"She asked for directions.",esp:"Ella preguntó cómo llegar."},{eng:"He has asked for her hand in marriage.",esp:"Él le ha pedido matrimonio."}],
+};
+
+function getSentences(v) {
+  return EXAMPLES[v.inf] || EXAMPLES_EXTRA[v.inf] || [
+    {eng:`I ${v.inf.toLowerCase()} regularly.`, esp:`Yo ${v.es.toLowerCase()} regularmente.`},
+    {eng:`She ${v.past.toLowerCase()} yesterday.`, esp:`Ella ${v.es.toLowerCase()} ayer.`},
+    {eng:`We have ${v.pp.toLowerCase()} before.`, esp:`Nosotros hemos ${v.es.toLowerCase()} antes.`}
+  ];
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let currentTab = 'all';
+let quizState  = {};
+
+// ── RENDER VERBS ──────────────────────────────────────────────────────────
+function getFilteredVerbs() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const sf = document.getElementById('soundFilter').value;
+  let verbs = [];
+  if (currentTab !== 'irregular') {
+    REGULAR.forEach(v => {
+      if (sf && v.sound !== sf) return;
+      if (q && !v.inf.toLowerCase().includes(q) && !v.es.toLowerCase().includes(q)) return;
+      verbs.push({...v, type:'regular'});
+    });
+  }
+  if (currentTab !== 'regular') {
+    if (!sf) {
+      IRREGULAR.forEach(v => {
+        if (q && !v.inf.toLowerCase().includes(q) && !v.es.toLowerCase().includes(q)) return;
+        verbs.push({...v, type:'irregular'});
+      });
+    }
+  }
+  verbs.sort((a,b)=>a.inf.localeCompare(b.inf));
+  return verbs;
+}
+
+function renderVerbs() {
+  const verbs = getFilteredVerbs();
+  const grid  = document.getElementById('verbGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('countDisplay').textContent = verbs.length;
+  if (!verbs.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = verbs.map((v,i) => `
+    <div class="verb-card ${v.type}" onclick="openModal('${v.inf}')" style="animation-delay:${i*15}ms">
+      <span class="verb-badge ${v.type}">${v.type==='irregular'?'Irregular':'Regular'}${v.sound?' · '+v.sound:''}</span>
+      <div class="verb-infinitive">${v.inf}</div>
+      <div class="verb-spanish"><span style="font-style:normal">🇪🇸</span> ${v.es}</div>
+      <div class="forms-row">
+        <div class="form-box">
+          <div class="form-label">Infinitive</div>
+          <div class="form-value">${v.inf}</div>
+        </div>
+        <div class="form-box">
+          <div class="form-label">Simple Past</div>
+          <div class="form-value">${v.past}</div>
+        </div>
+        <div class="form-box">
+          <div class="form-label">Past Participle</div>
+          <div class="form-value">${v.pp}</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm listen" onclick="event.stopPropagation();speak('${v.inf}')">🔊 Listen</button>
+        <button class="btn-sm example" onclick="event.stopPropagation();openModal('${v.inf}')">📖 Examples</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── TTS ───────────────────────────────────────────────────────────────────
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+function openModal(inf) {
+  const allVerbs = [...IRREGULAR.map(v=>({...v,type:'irregular'})), ...REGULAR.map(v=>({...v,type:'regular'}))];
+  const v = allVerbs.find(x=>x.inf===inf);
+  if (!v) return;
+  const sentences = getSentences(v);
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div style="clear:both"></div>
+    <span class="verb-badge ${v.type}" style="margin-bottom:14px;display:inline-block">${v.type==='irregular'?'Irregular':'Regular'}${v.sound?` · ${v.sound}`:''}</span>
+    <div class="modal-title">${v.inf}</div>
+    <div class="modal-spanish"><span style="font-style:normal">🇪🇸</span> ${v.es}</div>
+    <div class="modal-forms">
+      <div class="modal-form-box inf">
+        <div class="modal-form-label">Infinitive</div>
+        <div class="modal-form-value">${v.inf}</div>
+      </div>
+      <div class="modal-form-box past">
+        <div class="modal-form-label">Simple Past</div>
+        <div class="modal-form-value">${v.past}</div>
+      </div>
+      <div class="modal-form-box pp">
+        <div class="modal-form-label">Past Participle</div>
+        <div class="modal-form-value">${v.pp}</div>
+      </div>
+    </div>
+    <div class="modal-section-title">🎧 Pronunciation</div>
+    <button class="modal-listen-btn" onclick="speak('${v.inf}')">🔊 Listen: <b>${v.inf}</b> (Infinitive)</button>
+    <button class="modal-listen-btn" style="margin-top:8px;background:rgba(123,108,255,.1);border-color:rgba(123,108,255,.35);color:var(--accent2)" onclick="speak('${v.past}')">🔊 Listen: <b>${v.past}</b> (Simple Past)</button>
+    <button class="modal-listen-btn" style="margin-top:8px;background:rgba(255,108,138,.08);border-color:rgba(255,108,138,.35);color:var(--accent3)" onclick="speak('${v.pp}')">🔊 Listen: <b>${v.pp}</b> (Past Participle)</button>
+    <div class="modal-section-title">📖 Example sentences</div>
+    <div class="sentence-list">
+      ${sentences.map(s=>`
+        <div class="sentence-item" onclick="speak('${s.eng.replace(/'/g,"\\'")}')">
+          <div class="eng">${s.eng}</div>
+          <div class="esp">🇪🇸 ${s.esp}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target===document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────
+function startQuiz() {
+  const pool = [...IRREGULAR, ...REGULAR.map(v=>({...v}))];
+  const shuffled = pool.sort(()=>Math.random()-.5).slice(0,20);
+  quizState = { verbs: shuffled, index:0, score:0, answered:false };
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const qs = quizState;
+  if (qs.index >= qs.verbs.length) { renderQuizResult(); return; }
+  const v = qs.verbs[qs.index];
+  const modes = ['past','pp'];
+  const mode = modes[Math.floor(Math.random()*2)];
+  qs.currentMode = mode;
+  qs.currentVerb = v;
+  const label = mode==='past' ? 'Simple Past' : 'Past Participle';
+  const correct = mode==='past' ? v.past : v.pp;
+  // wrong options
+  const allVerbs = [...IRREGULAR,...REGULAR];
+  const wrongs = allVerbs.filter(x=>x!==v)
+    .sort(()=>Math.random()-.5).slice(0,3)
+    .map(x=> mode==='past'?x.past:x.pp);
+  const opts = [...wrongs, correct].sort(()=>Math.random()-.5);
+  const pct = ((qs.index)/qs.verbs.length*100).toFixed(0);
+
+  document.getElementById('quizCard').innerHTML = `
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-question-label">Question ${qs.index+1} of ${qs.verbs.length}</div>
+    <div class="quiz-verb">${v.inf}</div>
+    <div class="quiz-hint">What is the <b>${label}</b> of this verb?</div>
+    <div class="quiz-options" id="quizOpts">
+      ${opts.map(o=>`<button class="quiz-option" onclick="checkAnswer('${o.replace(/'/g,"\\'")}','${correct.replace(/'/g,"\\'")}',this)">${o}</button>`).join('')}
+    </div>
+    <div class="quiz-score">Score: <b>${qs.score}</b> / ${qs.index}</div>
+  `;
+}
+
+function checkAnswer(chosen, correct, btn) {
+  if (quizState.answered) return;
+  quizState.answered = true;
+  const opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(b => {
+    if (b.textContent.trim()===correct) b.classList.add('correct');
+    else if (b===btn) b.classList.add('wrong');
+    b.style.pointerEvents='none';
+  });
+  if (chosen===correct) quizState.score++;
+  setTimeout(()=>{ quizState.index++; quizState.answered=false; renderQuiz(); },1200);
+}
+
+function renderQuizResult() {
+  const {score, verbs} = quizState;
+  const pct = Math.round(score/verbs.length*100);
+  const emoji = pct>=80?'🏆':pct>=50?'👍':'📚';
+  document.getElementById('quizCard').innerHTML = `
+    <div style="font-size:3rem;margin-bottom:16px">${emoji}</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:8px">Quiz Complete!</div>
+    <div class="quiz-result">
+      <p>Your final score</p>
+      <div class="big">${score}/${verbs.length}</div>
+      <p style="margin-top:8px">${pct}% correct</p>
+    </div>
+    <button class="quiz-next-btn" style="margin-top:24px" onclick="startQuiz()">🔄 Try Again</button>
+  `;
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const isQuiz = tab==='quiz';
+  document.getElementById('main-section').style.display = isQuiz?'none':'block';
+  document.getElementById('quiz-section').style.display  = isQuiz?'block':'none';
+  document.getElementById('soundFilter').style.display   = (tab==='irregular'||tab==='all'&&false)?'none':'';
+  if (isQuiz) startQuiz();
+  else { document.getElementById('soundFilter').value=''; renderVerbs(); }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderVerbs();
+</script>
+</body>
+</html>
